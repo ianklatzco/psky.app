@@ -105,6 +105,9 @@ def index(path):
 
     print(request.url)
 
+    if ("favicon.ico" in str(request.url)):
+        return ""
+
     if str(request.url) == "https://psky.app/" or \
        str(request.url) == "http://psky.app/"  or \
        str(request.url) == "https://staging.psky.app/"  or \
@@ -124,7 +127,11 @@ def index(path):
         post_content = post_content.get("thread").get("post")
 
         author = post_content.get("author")
-        img_url = post_content.get("embed").get("images")[0].get("fullsize")
+        img_url=""
+        try:
+            img_url = post_content.get("embed").get("images")[0].get("fullsize")
+        except:
+            pass
         record = post_content.get("record")
         text = record.get("text")
 
