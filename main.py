@@ -91,15 +91,6 @@ cc @mr_ligi @coderobe
 </body>
 '''
 
-post_url =  "https://staging.bsky.app/profile/klatz.co/post/3ju6rnqcnig2c"
-img_url = "https://cdn.bsky.social/imgproxy/zqjeyWF5Sxzf-3ShQPWNGvqZU6OW5416vwlLmfFKeEI/rs:fit:2000:2000:1:0/plain/bafkreih5d3p6leodugpc7gx5xx2sjralbgzdnbvyn6m7usp5otkearc3kq@jpeg"
-content = """Berliners! Come to cbase at 1900 to see me give a talk on http://twitterbsky.klatz.co:8080 https://twitterbsky.klatz.co:8080 for @BerlinHacknTell
-
-as predicted, Twitter killed the code it depends on ^^
-
-cc @mr_ligi @coderobe
-"""
-
 def generate_html(full_path):
     # path = /profile/klatz.co/post/3jua5rlgrq42p
     # or
@@ -109,6 +100,11 @@ def generate_html(full_path):
     post_content = session.get_bloot_by_url(full_path).json()
 
     post_content = post_content.get("posts")[0]
+
+    print(full_path)
+    post_url = full_path.replace("psky","bsky")
+    if "staging" not in post_url:
+        post_url = post_url.replace("bsky.app","staging.bsky.app")
 
     author = post_content.get("author")
     img_url=""
@@ -171,7 +167,7 @@ def index(path):
         print("request.path: ", end='')
         print(request.path)
 
-        html = generate_html("https://bsky.app" + path)
+        html = generate_html("https://bsky.app/" + path)
     
         return html
 
