@@ -1,4 +1,4 @@
-# psky.app
+# p(review)sky.app
 vxtwitter for bsky (preview urls by rewriting them)
 
 # how to use
