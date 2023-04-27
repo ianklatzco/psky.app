@@ -2,6 +2,7 @@ import requests, json
 import atprototools, sys
 # from aiohttp import web
 from flask import Flask, request, redirect
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 
@@ -91,17 +92,70 @@ cc @mr_ligi @coderobe
 </body>
 '''
 
+def is_just_profile_url(full_path):
+    url = urlparse(full_path).path.split('/')
+    newli = []
+    for x in url:
+        if x == '':
+            continue
+        newli.append(x)
+    return len(newli) == 2
+
+def get_username(full_path):
+    url = urlparse(full_path).path.split('/')
+    newli = []
+    for x in url:
+        if x == '':
+            continue
+        newli.append(x)
+    return newli[1]
+
+
 def generate_html(full_path):
     # path = /profile/klatz.co/post/3jua5rlgrq42p
     # or
     # path = /profile/DID/post/3jua5rlgrq42p
 
     session = atprototools.Session(USERNAME,APP_PASSWORD)
+
+    if is_just_profile_url(full_path):
+        username = get_username(full_path)
+        profile_json = session.getProfile(username).json()
+
+        handle = profile_json.get("handle")
+        bio = profile_json.get("description")
+        displayName = profile_json.get("displayName")
+        profile_url = full_path
+
+        html = f"""
+        <html lang="en">
+        <head>
+
+        <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+        <meta content="#7FFFD4" name="theme-color" />
+        <meta property="og:site_name" content="psky.app" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="{displayName} (@{handle}) " />
+        <meta name="twitter:creator" content="@{displayName}" />
+
+        <meta property="og:description" content="{bio}" />
+
+        <!-- TODO what on earth is this -->
+        <!-- <link rel="alternate" href="https://vxtwitter.com/oembed.json?desc=Ian%20Klatzco&user=Twitter&link=https%3A//twitter.com/ian5v&ttype=photo" type="application/json+oembed" title="Ian Klatzco"> -->
+        <meta http-equiv="refresh" content="0; url = {profile_url}" />
+        </head>
+        <body>
+            Redirecting you to the tweet in a moment. <a href="{profile_url}">Or click here.</a>
+        </body>
+        """
+        return html
+
     post_content = session.get_bloot_by_url(full_path).json()
 
     post_content = post_content.get("posts")[0]
 
-    print(full_path)
+    print(full_path) # TODO flask log instead of print
     post_url = full_path.replace("psky","bsky")
     if "staging" not in post_url:
         post_url = post_url.replace("bsky.app","staging.bsky.app")
