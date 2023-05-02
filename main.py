@@ -21,76 +21,6 @@ creds = json.load(open("credentials.json"))
 USERNAME = creds.get("USERNAME")
 APP_PASSWORD = creds.get("APP_PASSWORD")
 
-'''
-GET / HTTP/1.1
-user-agent: Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)
-'''
-
-discord_preview_for_video_tweet = '''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-
-<meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
-<meta content="#7FFFD4" name="theme-color" />
-<meta property="og:site_name" content="vxTwitter">
-
-<meta name="twitter:card" content="player" />
-<meta name="twitter:title" content="Ian Klatzco (@ian5v) " />
-<meta name="twitter:image" content="0" />
-<meta name="twitter:player:width" content="1104" />
-<meta name="twitter:player:height" content="864" />
-<meta name="twitter:player:stream" content="https://video.twimg.com/ext_tw_video/1553060639530225664/pu/vid/920x720/qT8hHQq3KZUFi7uo.mp4?tag=12" />
-<meta name="twitter:player:stream:content_type" content="video/mp4" />
-
-<meta property="og:url" content="https://video.twimg.com/ext_tw_video/1553060639530225664/pu/vid/920x720/qT8hHQq3KZUFi7uo.mp4?tag=12" />
-<meta property="og:video" content="https://video.twimg.com/ext_tw_video/1553060639530225664/pu/vid/920x720/qT8hHQq3KZUFi7uo.mp4?tag=12" />
-<meta property="og:video:secure_url" content="https://video.twimg.com/ext_tw_video/1553060639530225664/pu/vid/920x720/qT8hHQq3KZUFi7uo.mp4?tag=12" />
-<meta property="og:video:type" content="video/mp4" />
-<meta property="og:video:width" content="1104" />
-<meta property="og:video:height" content="864" />
-<meta name="twitter:title" content="Ian Klatzco (@ian5v) " />
-<meta property="og:image" content="0" />
-<meta property="og:description" content="*zooms out*" />
-
-<link rel="alternate" href="https://vxtwitter.com/oembed.json?desc=Ian%20Klatzco&user=%2Azooms%20out%2A&link=https%3A//twitter.com/ian5v&ttype=video" type="application/json+oembed" title="Ian Klatzco">
-<meta http-equiv="refresh" content="0; url = https://twitter.com/ian5v/status/1553060950592425984" />
-</head>
-<body>
-     Redirecting you to the tweet in a moment. <a href="https://twitter.com/ian5v/status/1553060950592425984">Or click here.</a>
-</body>
-'''
-
-discord_preview_for_image_tweet = '''<!DOCTYPE html>
-<html lang="en">
-<head>
-
-<meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
-<meta content="#7FFFD4" name="theme-color" />
-<meta property="og:site_name" content="vxTwitter" />
-
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Ian Klatzco (@ian5v) " />
-<meta name="twitter:image" content="https://pbs.twimg.com/media/FujPeHmX0AAI2FX.jpg" />
-<meta name="twitter:image" content="https://pbs.twimg.com/media/FujPeHmX0AAI2FX.jpg" />
-<meta name="twitter:creator" content="@Ian Klatzco" />
-
-<meta property="og:description" content="Berliners! Come to cbase at 1900 to see me give a talk on http://twitterbsky.klatz.co:8080 https://twitterbsky.klatz.co:8080 for @BerlinHacknTell
-
-
-as predicted, Twitter killed the code it depends on ^^
-
-cc @mr_ligi @coderobe
-
-💖 0 🔁 0" />
-
-<link rel="alternate" href="https://vxtwitter.com/oembed.json?desc=Ian%20Klatzco&user=Twitter&link=https%3A//twitter.com/ian5v&ttype=photo" type="application/json+oembed" title="Ian Klatzco">
-<meta http-equiv="refresh" content="0; url = https://twitter.com/ian5v/status/1650797442550448129" />
-</head>
-<body>
-     Redirecting you to the tweet in a moment. <a href="https://twitter.com/ian5v/status/1650797442550448129">Or click here.</a>
-</body>
-'''
 
 def is_just_profile_url(full_path):
     url = urlparse(full_path).path.split('/')
@@ -109,6 +39,9 @@ def get_username(full_path):
             continue
         newli.append(x)
     return newli[1]
+
+def is_quotebloot(full_path):
+    pass
 
 
 def generate_html(full_path):
@@ -204,8 +137,13 @@ def index(path):
     if ("favicon.ico" in str(request.url)):
         return ""
 
+    # TODO @yafesdot or anyone listcomprehension this so the only inputs are psky and fxbsky
     if str(request.url) == "https://psky.app/" or \
        str(request.url) == "http://psky.app/"  or \
+       str(request.url) == "https://fxbsky.app/" or \
+       str(request.url) == "http://fxbsky.app/"  or \
+       str(request.url) == "https://staging.fxbsky.app/" or \
+       str(request.url) == "http://staging.fxbsky.app/"  or \
        str(request.url) == "https://staging.psky.app/"  or \
        str(request.url) == "http://staging.psky.app/":
         return redirect("https://github.com/ianklatzco/psky.app/")

@@ -28,3 +28,14 @@ class TestFoo(unittest.TestCase):
     def test_generate_profile_html(self):
         url = "https://staging.bsky.app/profile/klatz.co"
         generate_html(url)
+
+    def test_quoteskeet(self):
+        # quotebloot
+        # https://github.com/ianklatzco/psky.app/issues/4
+        # thanks steveklabnik!
+        url = "https://psky.app/profile/did:plc:3danwc67lo7obz2fmdg6jxcr/post/3jup6ppmuef2g"
+        ee = generate_html(url)
+        print(ee)
+
+        # first step: detect if it's a quotebloot
+        is_quotebloot(url)
