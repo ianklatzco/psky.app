@@ -33,6 +33,9 @@ class TestFoo(unittest.TestCase):
         url = "https://psky.app/profile/did:plc:3danwc67lo7obz2fmdg6jxcr/post/3jup6ppmuef2g"
         assert is_quotebloot(url) == True
 
+        url = "https://psky.app/profile/roxiqt.com/post/3jurhu2nr7c2m"
+        assert is_quotebloot(url) == False
+
     def test_quoteskeet(self):
         # quotebloot
         # https://github.com/ianklatzco/psky.app/issues/4

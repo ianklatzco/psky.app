@@ -46,7 +46,7 @@ def get_username(full_path):
 def is_quotebloot(full_path):
     # really more like "record contains another"
     # what does a quotebloot look like in the json?
-    resp = session.get_bloot_by_url("https://staging.psky.app/profile/klatz.co/post/3juqon33v2v2v")
+    resp = session.get_bloot_by_url(full_path)
     #  thread -> post -> embed -> notNote
     # import pdb; pdb.set_trace()
     ff = resp.json().get('posts')[0].get('record').get('embed')
