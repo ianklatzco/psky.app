@@ -29,13 +29,17 @@ class TestFoo(unittest.TestCase):
         url = "https://staging.bsky.app/profile/klatz.co"
         generate_html(url)
 
+    def test_is_quotebloot(self):
+        url = "https://psky.app/profile/did:plc:3danwc67lo7obz2fmdg6jxcr/post/3jup6ppmuef2g"
+        assert is_quotebloot(url) == True
+
     def test_quoteskeet(self):
         # quotebloot
         # https://github.com/ianklatzco/psky.app/issues/4
         # thanks steveklabnik!
         url = "https://psky.app/profile/did:plc:3danwc67lo7obz2fmdg6jxcr/post/3jup6ppmuef2g"
         ee = generate_html(url)
-        print(ee)
+        # print(ee)
 
         # first step: detect if it's a quotebloot
-        is_quotebloot(url)
+        assert is_quotebloot(url) == True

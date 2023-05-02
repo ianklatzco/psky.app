@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 app = Flask(__name__)
 
+
 # upon receiving a psky.app request
 # fetch the bloot from bsky
 
@@ -20,6 +21,8 @@ app = Flask(__name__)
 creds = json.load(open("credentials.json"))
 USERNAME = creds.get("USERNAME")
 APP_PASSWORD = creds.get("APP_PASSWORD")
+
+session = atprototools.Session(USERNAME,APP_PASSWORD)
 
 
 def is_just_profile_url(full_path):
@@ -41,15 +44,19 @@ def get_username(full_path):
     return newli[1]
 
 def is_quotebloot(full_path):
-    pass
+    # really more like "record contains another"
+    # what does a quotebloot look like in the json?
+    resp = session.get_bloot_by_url("https://staging.psky.app/profile/klatz.co/post/3juqon33v2v2v")
+    #  thread -> post -> embed -> notNote
+    # import pdb; pdb.set_trace()
+    ff = resp.json().get('posts')[0].get('record').get('embed')
+    return ff != None
 
 
 def generate_html(full_path):
     # path = /profile/klatz.co/post/3jua5rlgrq42p
     # or
     # path = /profile/DID/post/3jua5rlgrq42p
-
-    session = atprototools.Session(USERNAME,APP_PASSWORD)
 
     if is_just_profile_url(full_path):
         username = get_username(full_path)
@@ -94,7 +101,7 @@ def generate_html(full_path):
         post_url = post_url.replace("bsky.app","staging.bsky.app")
 
     author = post_content.get("author")
-    img_url=""
+    img_url=None
     try:
         img_url = post_content.get("embed").get("images")[0].get("fullsize")
     except:
@@ -102,29 +109,73 @@ def generate_html(full_path):
     record = post_content.get("record")
     text = record.get("text")
 
-    html = f"""
-    <html lang="en">
-    <head>
+    if not is_quotebloot(full_path):
+        html = f"""
+        <html lang="en">
+        <head>
 
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
-    <meta content="#7FFFD4" name="theme-color" />
-    <meta property="og:site_name" content="psky.app" />
+        <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+        <meta content="#7FFFD4" name="theme-color" />
+        <meta property="og:site_name" content="psky.app" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="{author.get("displayName")} (@{author.get("handle")}) " />
-    <meta name="twitter:image" content="{img_url}" />
-    <meta name="twitter:creator" content="@{author.get("displayName")}" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="{author.get("displayName")} (@{author.get("handle")}) " />
+        <meta name="twitter:image" content="{img_url}" />
+        <meta name="twitter:creator" content="@{author.get("displayName")}" />
 
-    <meta property="og:description" content="{text}" />
+        <meta property="og:description" content="{text}" />
 
-    <!-- TODO what on earth is this -->
-    <!-- <link rel="alternate" href="https://vxtwitter.com/oembed.json?desc=Ian%20Klatzco&user=Twitter&link=https%3A//twitter.com/ian5v&ttype=photo" type="application/json+oembed" title="Ian Klatzco"> -->
-    <meta http-equiv="refresh" content="0; url = {post_url}" />
-    </head>
-    <body>
-        Redirecting you to the tweet in a moment. <a href="{post_url}">Or click here.</a>
-    </body>
-    """
+        <!-- TODO what on earth is this -->
+        <!-- <link rel="alternate" href="https://vxtwitter.com/oembed.json?desc=Ian%20Klatzco&user=Twitter&link=https%3A//twitter.com/ian5v&ttype=photo" type="application/json+oembed" title="Ian Klatzco"> -->
+        <meta http-equiv="refresh" content="0; url = {post_url}" />
+        </head>
+        <body>
+            Redirecting you to the tweet in a moment. <a href="{post_url}">Or click here.</a>
+        </body>
+        """
+    else: # is quotebloot
+        # fetch quoted spleet
+        # post_content
+        embed = post_content.get('embed')
+        # import pdb; pdb.set_trace()
+        embed_text = embed.get('record').get('value').get('text')
+        embed_author = embed.get('record').get('author').get('handle')
+        embed_image = None # TODO
+
+        if img_url == None:
+            try:
+                img_url = embed.get('record').get('embeds')[0].get('images')[0].get('thumb')
+            except:
+                pass
+
+        html = f"""
+        <html lang="en"> 
+        <head>
+
+        <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+        <meta content="#7FFFD4" name="theme-color" />
+        <meta property="og:site_name" content="psky.app" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="{author.get("displayName")} (@{author.get("handle")}) " />
+        <meta name="twitter:image" content="{img_url}" />
+        <meta name="twitter:creator" content="@{author.get("displayName")}" />
+
+        <meta property="og:description" content="{text}
+
+        = QRT  @ {embed_author} =================================================
+        {embed_text}
+        " />
+
+        <!-- TODO what on earth is this -->
+        <!-- <link rel="alternate" href="https://vxtwitter.com/oembed.json?desc=Ian%20Klatzco&user=Twitter&link=https%3A//twitter.com/ian5v&ttype=photo" type="application/json+oembed" title="Ian Klatzco"> -->
+        <meta http-equiv="refresh" content="0; url = {post_url}" />
+        </head>
+        <body>
+            Redirecting you to the tweet in a moment. <a href="{post_url}">Or click here.</a>
+        </body>
+        """
+
     return html
 
 
