@@ -53,20 +53,6 @@ def contains_embed(full_path):
     return ff != None
 
 
-def generate_html(full_path):
-    assert "https://bsky.app/profile/" in full_path 
-
-    if is_just_profile_url(full_path):
-        pass # moved
-
-    print(full_path) # TODO flask log instead of print
-
-    post_url = full_path.replace("psky","bsky")
-
-    if "staging" not in post_url:
-        post_url = post_url.replace("bsky.app","staging.bsky.app")
-
-
 def generate_html_with_image(full_path):
     assert "https://bsky.app/profile/" in full_path 
 
@@ -282,7 +268,7 @@ def generate_link_preview(full_path):
 @app.route("/<path:path>")
 def index(path):
 
-    print(request.url)
+    print(request.url) # TODO flask log instead of print
 
     if ("favicon.ico" in str(request.url)):
         return ""
@@ -312,6 +298,13 @@ def index(path):
         html = generate_link_preview("https://bsky.app/" + path)
     
         return html
+
+        post_url = full_path.replace("psky","bsky")
+
+        if "staging" not in post_url:
+            post_url = post_url.replace("bsky.app","staging.bsky.app")
+
+
 
 if __name__ == "__main__":
     app.run(port=8081)
