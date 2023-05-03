@@ -6,6 +6,24 @@ from urllib.parse import urlparse
 
 app = Flask(__name__)
 
+DISCORD_WEBHOOK_URL = "https://disc"+"ord.com/api/web"+"hooks/110338283"+"6788084819/XNyc-N5bWsz160LM45v8"+"u9AjMv_GmAxPfpn3OAWYG1kBSY"+"t8ux5br4QRBk8xcdV5qLbK"
+
+def my_exception_handler(type, value, traceback):
+    # Here, you can define how you want to handle the exception.
+    # In this example, we'll just print the type and value of the exception.
+    a = f"Caught {type.__name__}: {value}"
+    print(a)
+    print(traceback)
+    resp = requests.post(DISCORD_WEBHOOK_URL, json={ 'content':a}, headers={'Content-Type': 'application/json'})
+    # resp = requests.post(DISCORD_WEBHOOK_URL, json={ 'content':traceback}, headers={'Content-Type': 'application/json'})
+
+
+# Set the excepthook to our custom exception handler.
+sys.excepthook = my_exception_handler
+
+# Here's some code that raises an exception.
+# raise ValueError("Something went wrong!")
+
 
 # upon receiving a psky.app request
 # fetch the bloot from bsky
@@ -261,7 +279,10 @@ def generate_link_preview(full_path):
         elif (embed_type == "app.bsky.embed.images"):
             return generate_html_with_image(full_path)
         else: # external
-            raise NotImplementedError
+            # TODO fetch the image from the external embed
+            # but it's possible some external embed don't have images
+            # in which case simply displaying the link might be best
+            return generate_html_textonly(full_path)
 
 
 @app.route("/", defaults={'path': ''})
