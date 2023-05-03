@@ -299,12 +299,6 @@ def index(path):
     
         return html
 
-        post_url = full_path.replace("psky","bsky")
-
-        if "staging" not in post_url:
-            post_url = post_url.replace("bsky.app","staging.bsky.app")
-
-
 
 if __name__ == "__main__":
     app.run(port=8081)
