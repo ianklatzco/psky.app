@@ -43,7 +43,7 @@ def get_username(full_path):
         newli.append(x)
     return newli[1]
 
-def is_quotebloot(full_path):
+def contains_embed(full_path):
     # really more like "record contains another"
     # what does a quotebloot look like in the json?
     resp = session.get_bloot_by_url(full_path)
@@ -91,8 +91,11 @@ def generate_html(full_path):
         """
         return html
 
+    if "app" not in full_path:
+        full_path = "https://staging.bsky.app/" + full_path
     post_content = session.get_bloot_by_url(full_path).json()
 
+    # import pdb; pdb.set_trace()
     post_content = post_content.get("posts")[0]
 
     print(full_path) # TODO flask log instead of print
@@ -109,7 +112,7 @@ def generate_html(full_path):
     record = post_content.get("record")
     text = record.get("text")
 
-    if not is_quotebloot(full_path):
+    if not contains_embed(full_path):
         html = f"""
         <html lang="en">
         <head>
@@ -138,9 +141,43 @@ def generate_html(full_path):
         # post_content
         embed = post_content.get('embed')
         # import pdb; pdb.set_trace()
-        embed_text = embed.get('record').get('value').get('text')
-        embed_author = embed.get('record').get('author').get('handle')
-        embed_image = None # TODO
+
+        embed_type = embed.get("$type")
+        if embed_type != "app.bsky.embed.images":
+            html = f"""
+            <html lang="en">
+            <head>
+
+            <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+            <meta content="#7FFFD4" name="theme-color" />
+            <meta property="og:site_name" content="psky.app" />
+
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content="{author.get("displayName")} (@{author.get("handle")}) " />
+            <meta name="twitter:image" content="{img_url}" />
+            <meta name="twitter:creator" content="@{author.get("displayName")}" />
+
+            <meta property="og:description" content="{text}" />
+
+            <!-- TODO what on earth is this -->
+            <!-- <link rel="alternate" href="https://vxtwitter.com/oembed.json?desc=Ian%20Klatzco&user=Twitter&link=https%3A//twitter.com/ian5v&ttype=photo" type="application/json+oembed" title="Ian Klatzco"> -->
+            <meta http-equiv="refresh" content="0; url = {post_url}" />
+            </head>
+            <body>
+                Redirecting you to the tweet in a moment. <a href="{post_url}">Or click here.</a>
+            </body>
+            """
+            return html
+
+        try:
+            # at this point it's either a image or something like a github embed card
+            # there's a $type field we can split on
+            embed_type = embed.get("$type")
+            embed_text = embed.get('record').get('value').get('text')
+            embed_author = embed.get('record').get('author').get('handle')
+            embed_image = None # TODO
+        except:
+            print("embed fetching failed")
 
         if img_url == None:
             try:
