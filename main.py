@@ -40,7 +40,7 @@ creds = json.load(open("credentials.json"))
 USERNAME = creds.get("USERNAME")
 APP_PASSWORD = creds.get("APP_PASSWORD")
 
-session = atprototools.Session(USERNAME,APP_PASSWORD)
+session = None
 
 
 def is_just_profile_url(full_path):
@@ -67,7 +67,11 @@ def contains_embed(full_path):
     # what does a quotebloot look like in the json?
     resp = session.get_bloot_by_url(full_path)
     #  thread -> post -> embed -> notNote
-    ff = resp.json().get('posts')[0].get('record').get('embed')
+    try:
+        ff = resp.json().get('posts')[0].get('record').get('embed')
+    except:
+        resp = requests.post(DISCORD_WEBHOOK_URL, json={ 'content':"naughty url that failed: <"+full_path+">\n\n" + str(resp.json())}, headers={'Content-Type': 'application/json'})
+        raise ValueError("failed for some reason?")
     return ff != None
 
 
@@ -316,6 +320,9 @@ def index(path):
         # print("request.path: ", end='')
         print(request.path)
 
+        global session
+
+        session = atprototools.Session(USERNAME,APP_PASSWORD)
         html = generate_link_preview("https://bsky.app/" + path)
     
         return html
