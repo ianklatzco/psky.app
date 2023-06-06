@@ -88,8 +88,6 @@ def generate_html_with_image(full_path):
     except:
         pass
 
-    post_url = full_path.replace("bsky.app","staging.bsky.app")
-
     record = post_content.get("record")
     text = record.get("text")
 
@@ -162,8 +160,6 @@ def generate_html_textonly(full_path):
 
     img_url = None
 
-    post_url = full_path.replace("bsky.app","staging.bsky.app")
-
     record = post_content.get("record")
     text = record.get("text")
 
@@ -207,8 +203,6 @@ def generate_html_qrt(full_path):
     author = post_content.get("author")
 
     img_url = None 
-
-    post_url = full_path.replace("bsky.app","staging.bsky.app")
 
     record = post_content.get("record")
 

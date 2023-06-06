@@ -18,15 +18,15 @@ class TestFoo(unittest.TestCase):
         # fails if error
     
     def test_is_profile_url(self):
-        url = "https://staging.bsky.app/profile/klatz.co"
-        url2 = "https://staging.bsky.app/profile/klatz.co/"
-        url3 = "https://staging.bsky.app/profile/klatz.co/post/lol"
+        url = "https://bsky.app/profile/klatz.co"
+        url2 = "https://bsky.app/profile/klatz.co/"
+        url3 = "https://bsky.app/profile/klatz.co/post/lol"
         assert is_just_profile_url(url) == True
         assert is_just_profile_url(url2) == True
         assert is_just_profile_url(url3) == False
     
     def test_generate_profile_html(self):
-        url = "https://staging.bsky.app/profile/klatz.co"
+        url = "https://bsky.app/profile/klatz.co"
         generate_html_profileonly(url)
     
     def test1(self):
