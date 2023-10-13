@@ -1,0 +1,29 @@
+<meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+<meta content="{{ color }}" name="theme-color" />
+<meta property="og:site_name" content="{{ appname }}">
+
+<meta name="twitter:card" content="player" />
+<meta name="twitter:title" content="{{ user }}" />
+<meta name="twitter:image" content="{{ pic }}" />
+<!-- The line below breaks Telegram embeds if present but doesn't affect Discord embeds if removed
+    <meta name="twitter:player"                     content="{{ vidurl }}" />
+    <meta name="twitter:description"                content="{{ desc }}" />!-->
+<meta name="twitter:player:width" content="720" />
+<meta name="twitter:player:height" content="480" />
+<meta name="twitter:player:stream" content="{{ vidurl }}" />
+<meta name="twitter:player:stream:content_type" content="video/mp4" />
+
+
+<meta property="og:url" content="{{ vidlink }}" />
+<meta property="og:video" content="{{ vidurl }}" />
+<meta property="og:video:secure_url" content="{{ vidurl }}" />
+<meta property="og:video:type" content="video/mp4" />
+<meta property="og:video:width" content="720" />
+<meta property="og:video:height" content="480" />
+<meta property="og:title" content="{{ user }}" />
+<!--<meta property="og:description"        content="{{ desc }}" />!-->
+<meta property="og:image" content="{{ pic }}" />
+
+<!--!-->
+<link rel="alternate" href="{{ url }}/oembed.json?desc={{ urlUser }}&user={{ urlDesc }}&link={{ urlUserLink }}" type="application/json+oembed" title="{{ user }}">
+<meta http-equiv="refresh" content="0; url = {{ tweetLink }}" /> {% endblock %} {% block body %} Redirecting you to the tweet in a moment. <a href="{{ tweetLink }}">Or click here.</a> {% endblock %}

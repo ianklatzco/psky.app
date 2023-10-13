@@ -2,11 +2,14 @@ import requests, json
 import atprototools, sys
 # from aiohttp import web
 from flask import Flask, request, redirect
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote
+
+urlencode = quote
 
 app = Flask(__name__)
 
 DISCORD_WEBHOOK_URL = "https://disc"+"ord.com/api/web"+"hooks/110338283"+"6788084819/XNyc-N5bWsz160LM45v8"+"u9AjMv_GmAxPfpn3OAWYG1kBSY"+"t8ux5br4QRBk8xcdV5qLbK"
+DISCORD_MONITOR_WEBHOOK_URL = "https://disc"+"ord.com/api/webh"+"ooks/11050580500"+"76852234/WVTQke61gVg-6Zy4OPVAYACe"+"crPwXpDInU1nxW8owWqcrbVEmpIATKFSeGFeWeIOY-32"
 
 def my_exception_handler(type, value, traceback):
     # Here, you can define how you want to handle the exception.
@@ -35,6 +38,23 @@ sys.excepthook = my_exception_handler
 # lol jk aiohttp is more finicky than flask despite being more performant
 # throws a 400 error, seems like you need another server/wsgi in front of it to validate correctly formatted html
 # but my requests are relatively benign and it's still failing
+
+generate_embed_user_agents = [
+    "facebookexternalhit/1.1",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.57 Safari/537.36",
+    "Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US; Valve Steam Client/default/1596241936; ) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36",
+    "Mozilla/5.0 (Windows; U; Windows NT 10.0; en-US; Valve Steam Client/default/0; ) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36", 
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0", 
+    "facebookexternalhit/1.1",
+    "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; Valve Steam FriendsUI Tenfoot/0; ) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36", 
+    "Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)", 
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:38.0) Gecko/20100101 Firefox/38.0", 
+    "Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)", 
+    "TelegramBot (like TwitterBot)", 
+    "Mozilla/5.0 (compatible; January/1.0; +https://gitlab.insrt.uk/revolt/january)", 
+    "Synapse (bot; +https://github.com/matrix-org/synapse)",
+    "test"]
+
 
 creds = json.load(open("credentials.json"))
 USERNAME = creds.get("USERNAME")
@@ -65,6 +85,7 @@ def contains_embed(full_path):
     assert "https://bsky.app/profile/" in full_path 
     # really more like "record contains another"
     # what does a quotebloot look like in the json?
+    global session
     resp = session.get_bloot_by_url(full_path)
     #  thread -> post -> embed -> notNote
     try:
@@ -78,9 +99,11 @@ def contains_embed(full_path):
 def generate_html_with_image(full_path):
     assert "https://bsky.app/profile/" in full_path 
 
+    global session
     post_content = session.get_bloot_by_url(full_path).json()
     post_content = post_content.get("posts")[0] # might error here? need to learn about the types
     author = post_content.get("author")
+    displayName = author.get("displayName")
 
     img_url = None
     try:
@@ -88,10 +111,12 @@ def generate_html_with_image(full_path):
     except:
         pass
 
-    post_url = full_path.replace("bsky.app","staging.bsky.app")
+    post_url = full_path
 
     record = post_content.get("record")
     text = record.get("text")
+
+    text = text.replace("<","").replace(">","").replace('"',"")
 
     html = f"""
     <html lang="en">
@@ -100,11 +125,12 @@ def generate_html_with_image(full_path):
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
     <meta content="#7FFFD4" name="theme-color" />
     <meta property="og:site_name" content="psky.app" />
+    <meta property="og:title" content="{displayName} (@{author.get("handle")}" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="{author.get("displayName")} (@{author.get("handle")}) " />
+    <meta name="twitter:title" content="{displayName} (@{author.get("handle")}) " />
     <meta name="twitter:image" content="{img_url}" />
-    <meta name="twitter:creator" content="@{author.get("displayName")}" />
+    <meta name="twitter:creator" content="@{displayName}" />
 
     <meta property="og:description" content="{text}" />
 
@@ -119,9 +145,13 @@ def generate_html_with_image(full_path):
     return html
 
 def generate_html_profileonly(full_path):
-    assert "https://bsky.app/profile/" in full_path 
+    # fixes bug where profile previews wouldn't show if you used staging.psky.app on just a profile
+    assert ("https://bsky.app/profile/" in full_path  or "https://staging.bsky.app/profile/" in full_path)
+
+    global session
 
     username = get_username(full_path)
+    # import pdb; pdb.set_trace()
     profile_json = session.getProfile(username).json()
 
     handle = profile_json.get("handle")
@@ -129,13 +159,19 @@ def generate_html_profileonly(full_path):
     displayName = profile_json.get("displayName")
     profile_url = full_path
 
+    bio = bio.replace("<","").replace(">","")
+    displayName = displayName.replace("<","").replace(">","")
+
     html = f"""
     <html lang="en">
     <head>
 
+    <meta name="description" content="(target audience: students)">
+    
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
     <meta content="#7FFFD4" name="theme-color" />
     <meta property="og:site_name" content="psky.app" />
+    <meta property="og:title" content="{displayName} (@{handle})" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="{displayName} (@{handle}) " />
@@ -150,22 +186,30 @@ def generate_html_profileonly(full_path):
     <body>
         Redirecting you to the tweet in a moment. <a href="{profile_url}">Or click here.</a>
     </body>
+    </html>
     """
     return html
 
+# TODO delete the distinction between image and text; the only difference is the image field so they can probabyl
+# be the same html
 def generate_html_textonly(full_path):
-    assert "https://bsky.app/profile/" in full_path 
+    assert ("https://bsky.app/profile/" in full_path  or "https://staging.bsky.app/profile/" in full_path)
 
+    global session
     post_content = session.get_bloot_by_url(full_path).json()
     post_content = post_content.get("posts")[0] # might error here? need to learn about the types
     author = post_content.get("author")
 
     img_url = None
 
-    post_url = full_path.replace("bsky.app","staging.bsky.app")
+    post_url = full_path
 
     record = post_content.get("record")
     text = record.get("text")
+
+    text = text.replace("<","").replace(">","").replace("\"","&#34;")
+    displayName = author.get("displayName")
+    displayName = displayName.replace("<","").replace(">","")
 
     html = f"""
     <html lang="en">
@@ -174,11 +218,12 @@ def generate_html_textonly(full_path):
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
     <meta content="#7FFFD4" name="theme-color" />
     <meta property="og:site_name" content="psky.app" />
+    <meta property="og:title" content="{displayName} (@{author.get("handle")}" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="{author.get("displayName")} (@{author.get("handle")}) " />
+    <meta name="twitter:title" content="{displayName} (@{author.get("handle")}) " />
     <meta name="twitter:image" content="{img_url}" />
-    <meta name="twitter:creator" content="@{author.get("displayName")}" />
+    <meta name="twitter:creator" content="@{displayName}" />
 
     <meta property="og:description" content="{text}" />
 
@@ -200,6 +245,7 @@ def generate_html_qrt(full_path):
     # i'm not sure which of the two is best?
     # should probably be "prefer undertweet over QRT but do at least one"
     ''' # TODO /fileanissue from_docstring
+    global session
     post_content = session.get_bloot_by_url(full_path).json()
 
     post_content = post_content.get("posts")[0]
@@ -208,7 +254,7 @@ def generate_html_qrt(full_path):
 
     img_url = None 
 
-    post_url = full_path.replace("bsky.app","staging.bsky.app")
+    post_url = full_path
 
     record = post_content.get("record")
 
@@ -218,11 +264,16 @@ def generate_html_qrt(full_path):
 
     embed_type = embed.get("$type")
 
+    displayName = author.get("displayName")
+    text = text.replace("<","").replace(">","").replace("\"","")
+    displayName = displayName.replace("<","").replace(">","")
+
     try:
         # at this point it's either a image or something like a github embed card
         # there's a $type field we can split on
         embed_type = embed.get("$type")
         embed_text = embed.get('record').get('value').get('text')
+        embed_text = embed_text.replace("<","").replace(">","").replace('"',"")
         embed_author = embed.get('record').get('author').get('handle')
         embed_image = None # TODO
     except:
@@ -241,11 +292,12 @@ def generate_html_qrt(full_path):
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
     <meta content="#7FFFD4" name="theme-color" />
     <meta property="og:site_name" content="psky.app" />
+    <meta property="og:title" content="{displayName} (@{author.get("handle")}" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="{author.get("displayName")} (@{author.get("handle")}) " />
+    <meta name="twitter:title" content="{displayName} (@{author.get("handle")}) " />
     <meta name="twitter:image" content="{img_url}" />
-    <meta name="twitter:creator" content="@{author.get("displayName")}" />
+    <meta name="twitter:creator" content="@{displayName}" />
 
     <meta property="og:description" content="{text}
 
@@ -264,10 +316,12 @@ def generate_html_qrt(full_path):
 
     return html
 
-def generate_link_preview(full_path):
-    assert "https://bsky.app/profile/" in full_path 
+def generate_link_preview(full_path, request):
+    assert ("https://bsky.app/profile/" in full_path  or "https://staging.bsky.app/profile/" in full_path)
     # TODO type to contain / enforce https://bsky.app/profile/DIDxorUSERNAME/post/RKEY
     # @chatgpt please write me a type
+
+    global session 
 
     if is_just_profile_url(full_path):
         return generate_html_profileonly(full_path)
@@ -320,10 +374,15 @@ def index(path):
         # print("request.path: ", end='')
         print(request.path)
 
+        # if request.user_agent not in generate_embed_user_agents:
+        #     return redirect("https://staging.psky.app/"+path)
+
         global session
 
         session = atprototools.Session(USERNAME,APP_PASSWORD)
-        html = generate_link_preview("https://bsky.app/" + path)
+        html = generate_link_preview("https://bsky.app/" + path, request)
+
+        # resp = requests.post(DISCORD_MONITOR_WEBHOOK_URL, json={ 'content':"https://psky.app/"+path}, headers={'Content-Type': 'application/json'})
     
         return html
 

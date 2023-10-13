@@ -1,3 +1,6 @@
+# RETIRED
+bsky implemented embeds, so this code is no longer running!
+
 # p(review)sky.app
 vxtwitter for bsky (preview urls by rewriting them)
 
